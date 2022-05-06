@@ -19,4 +19,5 @@ target_include_directories(${FDM_LIB} PUBLIC ${INCLUDE_DIR})
 
 
 add_executable(${PROJECT_BINARY_TARGET} ${PROJECT_DIR}/main.cpp)
+target_link_libraries(${PROJECT_BINARY_TARGET} PUBLIC ${FDM_LIB})
 target_include_directories(${PROJECT_BINARY_TARGET} PUBLIC ${INCLUDE_DIR})

@@ -1,20 +1,13 @@
 #include <iostream>
 #include <iomanip>
 
-#include "Matrix.hpp"
+#include "Model.hpp"
 
 int main() {
-  mtrx::MatrixCreatorDynamic matrix_builder;
-  auto matrix = matrix_builder.Build<double>();
-  matrix->SetSize(13, 12);
-  matrix->SetValue(0, 0, 1.2);
-  matrix->SetValue(1, 2, 0.2);
-  matrix->SetValue(5, 7, 0.7);
+  fdm::Model model(7.0, 5.0, 0.2, 25.0, 0.1);
+  model.SetInitialCondition(11);
 
-  for (size_t i = 0; i < matrix->SizeRows(); ++i) {
-	for (size_t j = 0; j < matrix->SizeCols(); ++j) {
-	  std::cout << std::setw(4) << matrix->GetValue(i, j) << ' ';
-	}
-	std::cout << '\n';
-  }
+  model.SetHoleGeometry(fdm::Model::Point(2.0, 1.0), fdm::Model::Point(5.0, 1.0), fdm::Model::Point(5.0, 3.0));
+  model.TemplePrint();
+  return 0;
 }
