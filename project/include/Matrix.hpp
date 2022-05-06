@@ -7,6 +7,7 @@
 #include <memory>
 #include <type_traits>
 #include <vector>
+#include <algorithm>
 
 namespace mtrx {
 /**
@@ -28,6 +29,7 @@ class MatrixBase {
   virtual const Tp &GetValue(size_t row, size_t col) const = 0;
   virtual size_t SizeRows() const = 0;
   virtual size_t SizeCols() const = 0;
+  [[maybe_unused]] virtual void FillMatrix([[maybe_unused]] Tp val) {}
 
   virtual ~MatrixBase() = default;
 };
@@ -134,6 +136,7 @@ class MatrixDynamic : public base::MatrixDynamicBase<Tp> {
 
   void SetValue(size_t row, size_t col, Tp &&val) override;
   const Tp &GetValue(size_t row, size_t col) const override;
+  void FillMatrix(Tp val) override;
 
   MatrixDynamic() = default;
   MatrixDynamic(size_t rows, size_t cols) { SetSize(rows, cols); }
@@ -164,6 +167,11 @@ const Tp &MatrixDynamic<Tp>::GetValue(size_t row, size_t col) const {
   if (!CheckAccess(row, col)) {
   }
   return m_storage[MatrixAccessor(row, col)];
+}
+
+template <typename Tp>
+void MatrixDynamic<Tp>::FillMatrix(Tp val) {
+  std::fill(m_storage.begin(), m_storage.end(), val);
 }
 
 class MatrixCreatorDynamic {
