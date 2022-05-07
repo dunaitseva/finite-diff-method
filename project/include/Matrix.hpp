@@ -1,13 +1,13 @@
 #ifndef FINITEDIFFERENCEMETHOD_MATRIX_HPP_
 #define FINITEDIFFERENCEMETHOD_MATRIX_HPP_
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <exception>
 #include <memory>
 #include <type_traits>
 #include <vector>
-#include <algorithm>
 
 namespace mtrx {
 /**
@@ -181,7 +181,7 @@ class MatrixCreatorDynamic {
   template <typename Tp>
   using BaseType = base::MatrixDynamicBase<Tp>;
   template <typename Tp>
-  using Pointer = std::unique_ptr<BaseType<Tp>>;
+  using Pointer = std::shared_ptr<BaseType<Tp>>;
 
   template <typename Tp>
   Pointer<Tp> Build() {

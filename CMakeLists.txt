@@ -14,6 +14,7 @@ set(FDM_LIB FiniteDifferenceMethodLib)
 add_library(
         ${FDM_LIB}
         ${SOURCE_DIR}/Model.cpp
+        ${SOURCE_DIR}/SolutionStorage.cpp
 )
 target_include_directories(${FDM_LIB} PUBLIC ${INCLUDE_DIR})
 

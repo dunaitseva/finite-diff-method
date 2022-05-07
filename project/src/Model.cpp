@@ -49,11 +49,12 @@ void Model::SetInitialCondition(ModelNodeType init_conditions) {
   m_mesh_ptr_last->FillMatrix(init_conditions);
 }
 
-void Model::TimeIntegrate(double total_time) {
+void Model::TimeIntegrate(
+    double total_time, solution::SolutionStorageBase<ModelNodeType> &storage) {
   auto time_integrate_iterations =
       static_cast<size_t>(total_time / m_time_delta);
   for (size_t i = 0; i < time_integrate_iterations; ++i) {
-
+	storage.CommitLayer(m_mesh_ptr_present);
   }
 }
 
