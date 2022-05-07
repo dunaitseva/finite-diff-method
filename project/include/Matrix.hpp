@@ -10,6 +10,20 @@
 #include <vector>
 
 namespace mtrx {
+namespace exceptions {
+class BaseMatrixException : public std::exception {
+  [[nodiscard]] const char *what() const noexcept override {
+    return "Matrix error occur";
+  }
+};
+
+class MatrixSizeException : public BaseMatrixException {
+  [[nodiscard]] const char *what() const noexcept override {
+    return "Matrix size error occur. You may have gone beyond the matrix.";
+  }
+};
+}  // namespace exceptions
+
 /**
  * I do not really want to complicate the code in the context of my tasks.
  * Therefore, I add the implementation of the store and accessor as much as
@@ -131,15 +145,17 @@ class MatrixDynamic : public base::MatrixDynamicBase<Tp> {
     m_cols = cols;
     m_storage.resize(rows * cols);
   }
-  [[nodiscard]] virtual size_t SizeRows() const override { return m_rows; }
-  [[nodiscard]] virtual size_t SizeCols() const override { return m_cols; }
+  [[nodiscard]] size_t SizeRows() const override { return m_rows; }
+  [[nodiscard]] size_t SizeCols() const override { return m_cols; }
 
   void SetValue(size_t row, size_t col, Tp &&val) override;
   const Tp &GetValue(size_t row, size_t col) const override;
   void FillMatrix(Tp val) override;
 
   MatrixDynamic() = default;
-  MatrixDynamic(size_t rows, size_t cols) { SetSize(rows, cols); }
+  MatrixDynamic(size_t rows, size_t cols) : m_cols(m_cols), m_rows(m_rows) {
+    SetSize(rows, cols);
+  }
 
  private:
   MatrixStorageType m_storage;
@@ -158,6 +174,7 @@ class MatrixDynamic : public base::MatrixDynamicBase<Tp> {
 template <typename Tp>
 void MatrixDynamic<Tp>::SetValue(size_t row, size_t col, Tp &&val) {
   if (!CheckAccess(row, col)) {
+    throw exceptions::MatrixSizeException();
   }
   m_storage[MatrixAccessor(row, col)] = std::forward<Tp>(val);
 }
@@ -165,6 +182,7 @@ void MatrixDynamic<Tp>::SetValue(size_t row, size_t col, Tp &&val) {
 template <typename Tp>
 const Tp &MatrixDynamic<Tp>::GetValue(size_t row, size_t col) const {
   if (!CheckAccess(row, col)) {
+    throw exceptions::MatrixSizeException();
   }
   return m_storage[MatrixAccessor(row, col)];
 }
@@ -188,20 +206,6 @@ class MatrixCreatorDynamic {
     return std::forward<Pointer<Tp>>(std::make_unique<TargetType<Tp>>());
   }
 };
-
-namespace exceptions {
-class BaseMatrixException : public std::exception {
-  [[nodiscard]] const char *what() const noexcept override {
-    return "Matrix error occur";
-  }
-};
-
-class MatrixSizeException : public BaseMatrixException {
-  [[nodiscard]] const char *what() const noexcept override {
-    return "Matrix size error occur. You may have gone beyond the matrix.";
-  }
-};
-}  // namespace exceptions
 }  // namespace mtrx
 
 #endif  // FINITEDIFFERENCEMETHOD_MATRIX_HPP_

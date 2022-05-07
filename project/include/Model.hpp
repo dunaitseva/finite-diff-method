@@ -4,13 +4,18 @@
 #include <array>
 #include <exception>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <tuple>
 #include <utility>
 #include <vector>
 
+#include "CalculationUtils.hpp"
 #include "Matrix.hpp"
 #include "SolutionStorage.hpp"
+
+// As you'll see, I'm a big fan of readable aliases. Don't swear if this makes
+// my code unreadable. =)
 
 namespace fdm {
 /**
@@ -43,6 +48,7 @@ class Model {
     Point() : x(DefModelVal), y(DefModelVal) {}
     Point(ModelNodeType _x, ModelNodeType _y) : x(_x), y(_y) {}
   };
+
   /*
    * Triangular hole in the center of tube. I think
    * good idea to store it in fixed size array.
@@ -77,26 +83,22 @@ class Model {
    */
   void SetInitialCondition(ModelNodeType init_conditions);
 
-  void TimeIntegrate(double total_time,
-                     solution::SolutionStorageBase<ModelNodeType>& storage);
+  /*
+   * Just the few setters for restrictions, that have not specific behavior.
+   */
+  void SetOuterRestrictions(
+      const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_up,
+      const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_down,
+      const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_left,
+      const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_right);
+  void SetOuterRestrictions(
+      const restr::BoundaryRestrictionsStorageType<ModelNodeType>
+          &restrictions);
+  void SetInnerRestrictions(
+      const restr::BoundaryRestrincionPointerType<ModelNodeType> &restriction);
 
-  void TemplePrint() {
-    for (size_t i = 0; i < m_mesh_ptr_last->SizeRows(); ++i) {
-      for (size_t j = 0; j < m_mesh_ptr_last->SizeCols(); ++j) {
-        double _x = static_cast<double>(j) * m_x_delta;
-        double _y = static_cast<double>(i) * m_y_delta;
-        Point point(_x, _y);
-        if (PointOnBorder(point)) {
-          std::cout << "GG ";
-        } else if (PointInHole(point)) {
-          std::cout << "XX ";
-        } else {
-          std::cout << m_mesh_ptr_last->GetValue(i, j) << ' ';
-        }
-      }
-      std::cout << '\n';
-    }
-  }
+  void TimeIntegrate(double total_time,
+                     solution::SolutionStorageBase<ModelNodeType> &storage);
 
  private:
   MatrixPointerType m_mesh_ptr_present;
@@ -112,25 +114,29 @@ class Model {
   double m_time_delta;
 
   HoleGeometry m_hole_geometry;
+  restr::BoundaryRestrictionsStorageType<ModelNodeType> m_outer_restrictions;
+  restr::BoundaryRestrincionPointerType<ModelNodeType> m_inner_restriction;
 
   // Bellow functions helps to determine hole and boundary points related to
   // hole
-  bool PointInHole(Point point) const;
-  bool PointOnBorder(Point point) const;
+  [[nodiscard]] bool PointInHole(Point point) const;
+  [[nodiscard]] bool PointOnBorder(Point point) const;
   // Calculates auxiliary values for PointInHole and PointOnBorder function
-  std::tuple<ModelNodeType, ModelNodeType, ModelNodeType> CalcCheckValues(
-      Point point) const;
+  [[nodiscard]] std::tuple<ModelNodeType, ModelNodeType, ModelNodeType>
+  CalcCheckValues(
+      Point point) const;  // sorry for that, it's just a formatter :)))
+  ModelNodeType GetInnerNeighbor(size_t x_shift, size_t y_shift);
 };
 
 namespace exceptions {
 class ModelBaseException : std::exception {
-  [[nodiscard]] const char* what() const noexcept override {
+  [[nodiscard]] const char *what() const noexcept override {
     return "Model exception occur";
   }
 };
 
 class WrongDeltaRel : std::exception {
-  [[nodiscard]] const char* what() const noexcept override {
+  [[nodiscard]] const char *what() const noexcept override {
     return "Error: (dt / dx) ^ 2 > 1 / 2";
   }
 };

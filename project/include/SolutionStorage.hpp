@@ -1,6 +1,7 @@
 #ifndef FINITEDIFFERENCEMETHOD_SOLUTIONSTORAGE_HPP_
 #define FINITEDIFFERENCEMETHOD_SOLUTIONSTORAGE_HPP_
 
+#include <iomanip>
 #include <iostream>
 #include <memory>
 
@@ -23,6 +24,7 @@ class SolutionStorageBase {
   using MeshPointerType = std::shared_ptr<MeshType>;
 
   virtual void CommitLayer(const MeshPointerType &mesh_ptr) = 0;
+  virtual ~SolutionStorageBase() = default;
 };
 
 /**
@@ -37,13 +39,14 @@ class StandardStreamStorage : public SolutionStorageBase<MeshNodesType> {
   void CommitLayer(
       const typename SolutionStorageBase<MeshNodesType>::MeshPointerType
           &mesh_ptr) override {
+//    StandardStreamDefinition.precision(2);
     for (size_t i = 0; i < mesh_ptr->SizeRows(); ++i) {
       for (size_t j = 0; j < mesh_ptr->SizeCols(); ++j) {
         StandardStreamDefinition << mesh_ptr->GetValue(i, j) << ' ';
       }
       StandardStreamDefinition << '\n';
     }
-	StandardStreamDefinition << '\n';
+    StandardStreamDefinition << '\n';
   }
 };
 }  // namespace solution
