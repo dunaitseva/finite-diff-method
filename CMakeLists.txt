@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.22)
 project(FiniteDifferenceMethod)
 
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 set(CMAKE_CXX_STANDARD 20)
+message("${CMAKE_CXX_COMPILER}")
 #set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Werror -Wextra -Wall -Wpedantic")
 
 set(PROJECT_DIR project)
@@ -19,6 +21,6 @@ add_library(
 target_include_directories(${FDM_LIB} PUBLIC ${INCLUDE_DIR})
 
 
-add_executable(${PROJECT_BINARY_TARGET} ${PROJECT_DIR}/main.cpp)
+add_executable(${PROJECT_BINARY_TARGET} ${PROJECT_DIR}/solution.cpp)
 target_link_libraries(${PROJECT_BINARY_TARGET} PUBLIC ${FDM_LIB})
 target_include_directories(${PROJECT_BINARY_TARGET} PUBLIC ${INCLUDE_DIR})

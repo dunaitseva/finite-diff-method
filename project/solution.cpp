@@ -4,8 +4,18 @@
 
 #include "Model.hpp"
 
+constexpr double n_delta = 0.2;
+constexpr double t_delta = 0.1;
+constexpr double scale = 0.5;
+constexpr double final_n_delta = n_delta * scale;
+constexpr double final_t_delta = t_delta * scale;
+
 int main() {
-  fdm::Model model(6.0, 4.0, 0.3, 0.1);
+  std::cout << "Computing started with values:" << std::endl;
+  std::cout << "dx = dy = " << final_n_delta << std::endl;
+  std::cout << "dt = " << final_t_delta << std::endl;
+
+  fdm::Model model(6.0, 4.0, final_n_delta, final_t_delta);
   model.SetInitialCondition(20);
 
   fdm::restr::BoundaryRestrictionsStorageType<fdm::Model::ModelNodeType>
@@ -28,9 +38,12 @@ int main() {
                         fdm::Model::Point(5.0, 1.0),
                         fdm::Model::Point(5.0, 3.0));
 
-  fdm::solution::StandardStreamStorage<fdm::Model::ModelNodeType>
-      stream_storage;
+  fdm::solution::PlaceholderStorage<fdm::Model::ModelNodeType>
+      stream_storage_placeholder;
+  fdm::solution::StaticGnuplotHeatmapStorage<fdm::Model::ModelNodeType>
+	  stream_storage_gnuplot("heatmap");
 
-  model.TimeIntegrate(25.0, stream_storage);
+  model.TimeIntegrate(25.0, stream_storage_placeholder, 60);
+  model.SaveResult(stream_storage_gnuplot);
   return 0;
 }

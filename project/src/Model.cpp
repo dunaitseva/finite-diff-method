@@ -72,75 +72,93 @@ void Model::SetInnerRestrictions(
   m_inner_restriction = restriction;
 }
 
-void Model::TimeIntegrate(
-    double total_time, solution::SolutionStorageBase<ModelNodeType> &storage) {
+void Model::TimeIntegrate(double total_time,
+                          solution::SolutionStorageBase<ModelNodeType> &storage,
+                          ModelNodeType tube_flow) {
   storage.CommitLayer(m_mesh_ptr_present);
 
   auto time_integrate_iterations =
       static_cast<size_t>(total_time / m_time_delta);
+
   // Iterate time layers
   for (size_t t = 0; t < time_integrate_iterations; ++t) {
     m_mesh_ptr_last = m_mesh_ptr_present;
-    // Calculate all nodes into plate
-    for (size_t j = 1; j < m_mesh_ptr_last->SizeRows() - 1; ++j) {
-      for (size_t i = 1; i < m_mesh_ptr_last->SizeCols() - 1; ++i) {
-        Point curr_point(static_cast<double>(i) * m_x_delta,
-                         static_cast<double>(j) * m_y_delta);
-		if (!PointInHole(curr_point)) {
-		  if (PointOnBorder(curr_point)) {
-			ModelNodeType inner_value = GetInnerNeighbor(i, j);
-			m_mesh_ptr_present->SetValue(j, i, m_inner_restriction->operator()(inner_value, m_x_delta));
-		  } else {
-			equations::HeatConductionParamsType<ModelNodeType>
-				equation_parameters{m_mesh_ptr_last->GetValue(j, i),
-									m_mesh_ptr_last->GetValue(j, i - 1),
-									m_mesh_ptr_last->GetValue(j, i + 1),
-									m_mesh_ptr_last->GetValue(j - 1, i),
-									m_mesh_ptr_last->GetValue(j + 1, i),
-									m_time_delta,
-									m_x_delta,
-									m_y_delta,
-									0.1};
-			m_mesh_ptr_present->SetValue(
-				j, i, equations::HeatConductionProblem(equation_parameters));
-		  }
-		}else {
-		  m_mesh_ptr_present->SetValue(
-			  j, i, 0.0);
-		}
+    ComputeBoundaries();
+
+    ComputePlate(tube_flow);
+
+    storage.CommitLayer(m_mesh_ptr_present);
+  }
+  storage.CommitLayer(m_mesh_ptr_present);
+}
+
+void Model::ComputeBoundaries() {
+  // Traverse all boundary nodes necessary
+
+  // Firstly perform left and right boundaries
+  for (size_t i = 1; i < m_mesh_ptr_last->SizeRows() - 1; ++i) {
+    ModelNodeType T_x_left_inner = m_mesh_ptr_present->GetValue(i, 1);
+    ModelNodeType T_x_right_inner =
+        m_mesh_ptr_present->GetValue(i, m_mesh_ptr_last->SizeCols() - 2);
+
+    m_mesh_ptr_present->SetValue(
+        i, 0,
+        m_outer_restrictions[restr::LEFT_RESTRICTION]->operator()(
+            T_x_left_inner, m_y_delta));
+    m_mesh_ptr_present->SetValue(
+        i, m_mesh_ptr_last->SizeCols() - 1,
+        m_outer_restrictions[restr::RIGHT_RESTRICTION]->operator()(
+            T_x_right_inner, m_y_delta));
+  }
+
+  // Finally, perform up and down boundaries
+  for (size_t i = 0; i < m_mesh_ptr_last->SizeCols(); ++i) {
+    ModelNodeType T_x_down_inner = m_mesh_ptr_present->GetValue(1, i);
+    ModelNodeType T_x_up_inner =
+        m_mesh_ptr_present->GetValue(m_mesh_ptr_last->SizeRows() - 1, i);
+    m_mesh_ptr_present->SetValue(
+        0, i,
+        m_outer_restrictions[restr::DOWN_RESTRICTION]->operator()(
+            T_x_down_inner, m_x_delta));
+    m_mesh_ptr_present->SetValue(
+        m_mesh_ptr_last->SizeRows() - 1, i,
+        m_outer_restrictions[restr::UP_RESTRICTION]->operator()(T_x_up_inner,
+                                                                m_x_delta));
+  }
+
+  // In fact there is no necessary dependencies for mesh boundary traversal.
+  // So you can change this order if you need.
+}
+
+void Model::ComputePlate(ModelNodeType tube_flow) {
+  for (size_t j = 1; j < m_mesh_ptr_last->SizeRows() - 1; ++j) {
+    for (size_t i = 1; i < m_mesh_ptr_last->SizeCols() - 1; ++i) {
+      Point curr_point(static_cast<double>(i) * m_x_delta,
+                       static_cast<double>(j) * m_y_delta);
+      if (!PointInHole(curr_point)) {
+        if (PointOnBorder(curr_point)) {
+          ModelNodeType inner_value = GetInnerNeighbor(i, j);
+          m_mesh_ptr_present->SetValue(
+              j, i, m_inner_restriction->operator()(inner_value, m_x_delta));
+        } else {
+          equations::HeatConductionParamsType<ModelNodeType>
+              equation_parameters{m_mesh_ptr_last->GetValue(j, i),
+                                  m_mesh_ptr_last->GetValue(j, i - 1),
+                                  m_mesh_ptr_last->GetValue(j, i + 1),
+                                  m_mesh_ptr_last->GetValue(j - 1, i),
+                                  m_mesh_ptr_last->GetValue(j + 1, i),
+                                  m_time_delta,
+                                  m_x_delta,
+                                  m_y_delta,
+                                  0.1};
+          m_mesh_ptr_present->SetValue(
+              j, i, equations::HeatConductionProblem(equation_parameters));
+        }
+      } else {
+        m_mesh_ptr_present->SetValue(j, i,
+                                     std::forward<ModelNodeType>(tube_flow));
       }
     }
-
-	// Calculate boundary nodes
-	for (size_t i = 1; i < m_mesh_ptr_last->SizeRows() - 1; ++i) {
-	  ModelNodeType T_x_left_inner = m_mesh_ptr_present->GetValue(i, 1);
-	  ModelNodeType T_x_right_inner =
-		  m_mesh_ptr_present->GetValue(i, m_mesh_ptr_last->SizeCols() - 2);
-
-	  m_mesh_ptr_present->SetValue(
-		  i, 0,
-		  m_outer_restrictions[restr::LEFT_RESTRICTION]->operator()(
-			  T_x_left_inner, m_y_delta));
-	  m_mesh_ptr_present->SetValue(
-		  i, m_mesh_ptr_last->SizeCols() - 1,
-		  m_outer_restrictions[restr::RIGHT_RESTRICTION]->operator()(
-			  T_x_right_inner, m_y_delta));
-	}
-//
-//	for (size_t i = 0; i < m_mesh_ptr_last->SizeCols(); ++i) {
-//	  ModelNodeType T_x_down_inner = m_mesh_ptr_present->GetValue(1, i);
-//	  ModelNodeType T_x_up_inner =
-//		  m_mesh_ptr_present->GetValue(m_mesh_ptr_last->SizeRows() - 1, i);
-//	  m_mesh_ptr_present->SetValue(
-//		  0, i,
-//		  m_outer_restrictions[restr::DOWN_RESTRICTION]->operator()(
-//			  T_x_down_inner, m_x_delta));
-//	  m_mesh_ptr_present->SetValue(
-//		  m_mesh_ptr_last->SizeRows() - 1, i,
-//		  m_outer_restrictions[restr::UP_RESTRICTION]->operator()(T_x_up_inner,
-//																  m_x_delta));
-//	}
-    storage.CommitLayer(m_mesh_ptr_present);
   }
 }
 

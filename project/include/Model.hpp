@@ -43,10 +43,10 @@ class Model {
    * is more representative.
    */
   struct Point {
-    ModelNodeType x;
-    ModelNodeType y;
-    Point() : x(DefModelVal), y(DefModelVal) {}
-    Point(ModelNodeType _x, ModelNodeType _y) : x(_x), y(_y) {}
+	ModelNodeType x;
+	ModelNodeType y;
+	Point() : x(DefModelVal), y(DefModelVal) {}
+	Point(ModelNodeType _x, ModelNodeType _y) : x(_x), y(_y) {}
   };
 
   /*
@@ -57,15 +57,15 @@ class Model {
 
   // Finally, after all this NECESSARY definitions - code!!!
   Model()
-      : m_mesh_ptr_present(),
-        m_mesh_ptr_last(),
-        m_width(DefModelVal),
-        m_height(DefModelVal),
-        m_nodes_x(0),
-        m_nodes_y(0),
-        m_x_delta(0.0),
-        m_y_delta(0.0),
-        m_time_delta(0.0) {}
+	  : m_mesh_ptr_present(),
+		m_mesh_ptr_last(),
+		m_width(DefModelVal),
+		m_height(DefModelVal),
+		m_nodes_x(0),
+		m_nodes_y(0),
+		m_x_delta(0.0),
+		m_y_delta(0.0),
+		m_time_delta(0.0) {}
 
   Model(double width, double height, double delta_n, double time_delta);
 
@@ -87,18 +87,22 @@ class Model {
    * Just the few setters for restrictions, that have not specific behavior.
    */
   void SetOuterRestrictions(
-      const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_up,
-      const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_down,
-      const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_left,
-      const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_right);
+	  const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_up,
+	  const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_down,
+	  const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_left,
+	  const restr::BoundaryRestrincionPointerType<ModelNodeType> &restr_right);
   void SetOuterRestrictions(
-      const restr::BoundaryRestrictionsStorageType<ModelNodeType>
-          &restrictions);
+	  const restr::BoundaryRestrictionsStorageType<ModelNodeType>
+	  &restrictions);
   void SetInnerRestrictions(
-      const restr::BoundaryRestrincionPointerType<ModelNodeType> &restriction);
+	  const restr::BoundaryRestrincionPointerType<ModelNodeType> &restriction);
 
   void TimeIntegrate(double total_time,
-                     solution::SolutionStorageBase<ModelNodeType> &storage);
+					 solution::SolutionStorageBase<ModelNodeType> &storage,
+					 ModelNodeType tube_flow);
+  void SaveResult(solution::SolutionStorageBase<ModelNodeType> &storage) const {
+	storage.CommitLayer(m_mesh_ptr_present);
+  }
 
  private:
   MatrixPointerType m_mesh_ptr_present;
@@ -124,20 +128,27 @@ class Model {
   // Calculates auxiliary values for PointInHole and PointOnBorder function
   [[nodiscard]] std::tuple<ModelNodeType, ModelNodeType, ModelNodeType>
   CalcCheckValues(
-      Point point) const;  // sorry for that, it's just a formatter :)))
+	  Point point) const;  // sorry for that, it's just a formatter :)))
   ModelNodeType GetInnerNeighbor(size_t x_shift, size_t y_shift);
+
+  /*
+   * Calculation methods. Just use for improve code readability and
+   * decompose layer calculation.
+   */
+  void ComputeBoundaries();
+  void ComputePlate(ModelNodeType tube_flow);
 };
 
 namespace exceptions {
 class ModelBaseException : std::exception {
   [[nodiscard]] const char *what() const noexcept override {
-    return "Model exception occur";
+	return "Model exception occur";
   }
 };
 
 class WrongDeltaRel : std::exception {
   [[nodiscard]] const char *what() const noexcept override {
-    return "Error: (dt / dx) ^ 2 > 1 / 2";
+	return "Error: (dt / dx) ^ 2 > 1 / 2";
   }
 };
 }  // namespace exceptions
