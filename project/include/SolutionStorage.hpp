@@ -73,10 +73,6 @@ template <typename MeshNodesType>
 class StaticGnuplotHeatmapStorage : public SolutionStorageBase<MeshNodesType> {
  public:
   using StringType = std::string;
-  StringType plot_extension = ".plt";
-  StringType config_extension = ".cfg";
-  StringType mapping_extension = ".png";
-  StringType default_file_prefix = "def_output";
 
   explicit StaticGnuplotHeatmapStorage(
       const StringType &file_prefix)
@@ -118,6 +114,11 @@ class StaticGnuplotHeatmapStorage : public SolutionStorageBase<MeshNodesType> {
   StringType m_config_file_name;
   std::ofstream m_config_output;
   std::ofstream m_plot_output;
+
+  StringType plot_extension = ".plt";
+  StringType config_extension = ".cfg";
+  StringType mapping_extension = ".png";
+  StringType default_file_prefix = "def_output";
 
   void WriteConfig() {
     StringType terminal_def{"set terminal png\n"};
