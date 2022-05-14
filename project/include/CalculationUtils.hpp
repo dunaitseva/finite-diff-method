@@ -39,7 +39,7 @@ class SecondKindRestriction : public BaseRestriction<ModelNodeType> {
   explicit SecondKindRestriction(double constant = 0.0)
       : m_constant(constant) {}
   ModelNodeType operator()(ModelNodeType inner, double delta) override {
-    return inner - m_constant * delta;
+    return inner + m_constant * delta;
   }
 
  private:

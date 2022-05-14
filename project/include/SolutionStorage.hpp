@@ -96,7 +96,7 @@ class StaticGnuplotHeatmapStorage : public SolutionStorageBase<MeshNodesType> {
     std::ostream &StandardStreamDefinition = m_plot_output;
     for (size_t i = 0; i < mesh_ptr->SizeRows(); ++i) {
       for (size_t j = 0; j < mesh_ptr->SizeCols(); ++j) {
-        StandardStreamDefinition << mesh_ptr->GetValue(i, j) << ' ';
+        StandardStreamDefinition << std::setw(8) << mesh_ptr->GetValue(i, j) << ' ';
       }
       StandardStreamDefinition << '\n';
     }

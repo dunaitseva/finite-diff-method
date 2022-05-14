@@ -4,9 +4,9 @@
 
 #include "Model.hpp"
 
-constexpr double n_delta = 0.2;
+constexpr double n_delta = 0.45;
 constexpr double t_delta = 0.1;
-constexpr double scale = 0.5;
+constexpr double scale = 1;
 constexpr double final_n_delta = n_delta * scale;
 constexpr double final_t_delta = t_delta * scale;
 
@@ -43,7 +43,7 @@ int main() {
   fdm::solution::StaticGnuplotHeatmapStorage<fdm::Model::ModelNodeType>
 	  stream_storage_gnuplot("heatmap");
 
-  model.TimeIntegrate(25.0, stream_storage_placeholder, 60);
+  model.TimeIntegrate(25.0, stream_storage_placeholder, 0);
   model.SaveResult(stream_storage_gnuplot);
   return 0;
 }

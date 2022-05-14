@@ -37,3 +37,9 @@ cmake-build-debug/*
 
 # build directory
 build/*
+
+# TeX temple files
+*.aux
+*.log
+*.gz
+*.toc
