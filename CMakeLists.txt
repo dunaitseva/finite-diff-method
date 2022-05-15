@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.22)
 project(FiniteDifferenceMethod)
 
-set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+set(COMPILER "/usr/bin/clang++")
+
+set(CMAKE_CXX_COMPILER ${COMPILER})
 set(CMAKE_CXX_STANDARD 20)
-message("${CMAKE_CXX_COMPILER}")
-#set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Werror -Wextra -Wall -Wpedantic")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Werror -Wextra -Wall -Wpedantic")
 
 set(PROJECT_DIR project)
 set(INCLUDE_DIR ${PROJECT_DIR}/include)
