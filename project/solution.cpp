@@ -4,8 +4,8 @@
 
 #include "Model.hpp"
 
-constexpr double n_delta = 0.45;
-constexpr double t_delta = 0.1;
+constexpr double n_delta = 0.3;
+constexpr double t_delta = 0.07;
 constexpr double scale = 1;
 constexpr double final_n_delta = n_delta * scale;
 constexpr double final_t_delta = t_delta * scale;

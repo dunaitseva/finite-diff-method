@@ -137,9 +137,11 @@ void Model::ComputePlate(ModelNodeType tube_flow) {
                        static_cast<double>(j) * m_y_delta);
       if (!PointInHole(curr_point)) {
         if (PointOnBorder(curr_point)) {
-          ModelNodeType inner_value = GetInnerNeighbor(i, j);
+          ModelNodeType inner_value1 = GetInnerNeighbor(i + 1, j - 1);
+          ModelNodeType inner_value2 = GetInnerNeighbor(i + 1, j);
+		  ModelNodeType interpolate_inner_value = (inner_value1 + inner_value2) / 2;
           m_mesh_ptr_present->SetValue(
-              j, i, m_inner_restriction->operator()(inner_value, m_x_delta));
+              j, i, m_inner_restriction->operator()(interpolate_inner_value, m_x_delta));
         } else {
           equations::HeatConductionParamsType<ModelNodeType>
               equation_parameters{m_mesh_ptr_last->GetValue(j, i),
